@@ -30,7 +30,7 @@ class PostUrlTest(TestCase):
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
 
-    def test_availability_of_pages_and_template_names_for_non_authorized_users(self):
+    def test__pages_and_template_names_for_non_authorized_users(self):
         url_addresses_templates_names = {
             '/': 'posts/index.html',
             '/group/test_slug/': 'posts/group_list.html',
@@ -43,7 +43,7 @@ class PostUrlTest(TestCase):
                 self.assertEqual(response.status_code, 200)
                 self.assertTemplateUsed(response, template)
 
-    def test_availability_of_pages_and_template_names_for_authorized_users(self):
+    def test_pages_and_template_names_for_authorized_users(self):
         url_addresses_templates_names = {
             '/create/': 'posts/create_post.html',
             '/posts/1/edit/': 'posts/create_post.html',

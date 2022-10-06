@@ -100,29 +100,35 @@ class PostPegesTests(TestCase):
         }
         for value, expected in form_fields.items():
             with self.subTest(value=value):
-                form_field = response_create.context.get('form').fields.get(value)
+                form_field = (
+                    response_create.context.get('form').fields.get(value)
+                )
                 self.assertIsInstance(form_field, expected)
-                form_field = response_edit.context.get('form').fields.get(value)
+                form_field = (
+                    response_edit.context.get('form').fields.get(value)
+                )
                 self.assertIsInstance(form_field, expected)
 
-    def test_post_detail_pages_show_correct_context(self):
+    def test_post_detail_pages(self):
         '''Шаблон post_detail сформирован с правильным контекстом'''
-        response = self.client.get(reverse('posts:post_detail', kwargs={'post_id': TEST_POST_ID}))
+        response = self.client.get(
+            reverse('posts:post_detail', kwargs={'post_id': TEST_POST_ID})
+        )
         test_post = {
             response.context.get('post').author: self.user,
             response.context.get('post').group: self.group,
-            response.context.get('post').text: f'Тестовый текст поста {TEST_POST_ID}',
+            response.context.get('post').text: 'Тестовый текст поста 1',
         }
         for value, expected in test_post.items():
             with self.subTest(value=value):
                 self.assertEqual(value, expected)
 
     def test_additional_verification_when_creating_a_post(self):
-        '''Проверяем что при создании с указанием группы пост появляется на страницах: index, groip_list, profile'''
+        '''При создании пост появляется на нужных страницах'''
         test_post = Post.objects.create(
-            author = self.user,
-            group = self.group,
-            text = 'Проверяем что при создании с указанием группы пост появляется на страницах: index, groip_list, profile',
+            author=self.user,
+            group=self.group,
+            text='Проверочный пост',
         )
         pages = [
             reverse('posts:index'),
