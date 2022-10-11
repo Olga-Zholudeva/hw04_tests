@@ -1,5 +1,3 @@
-from re import I
-from turtle import title
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.conf import settings
