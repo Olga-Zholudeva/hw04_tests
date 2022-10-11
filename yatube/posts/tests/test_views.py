@@ -1,14 +1,14 @@
+from re import I
+from turtle import title
 from django.test import TestCase, Client
-from django.contrib.auth import get_user_model
 from django.urls import reverse
 from django.conf import settings
 from django import forms
+from posts.forms import PostForm
+
+from ..models import Group, Post, User
 
 
-from ..models import Group, Post
-
-User = get_user_model()
-COUNT_TEST_POST = 18
 TEST_POST_ID = 1
 
 
@@ -21,13 +21,11 @@ class PostPegesTests(TestCase):
             title='Тестовая группа',
             slug='test_slug',
         )
-        test_posts = []
-        for i in range(COUNT_TEST_POST):
-            test_posts.append(Post(
-                author=cls.user,
-                group=cls.group,
-                text=f'Тестовый текст поста {i + 1}'))
-        Post.objects.bulk_create(test_posts)
+        cls.post = Post.objects.create(
+            author=cls.user,
+            text='Тестовый пост',
+            group=cls.group
+        )
         cls.templates_pages_names = {
             reverse(
                 'posts:index'
@@ -54,8 +52,6 @@ class PostPegesTests(TestCase):
         }
 
     def setUp(self):
-        self.guest_client = Client()
-        self.user = User.objects.get(username=self.user.username)
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
 
@@ -67,7 +63,15 @@ class PostPegesTests(TestCase):
                 self.assertTemplateUsed(response, template)
 
     def test_pages_users_correct_context_with_paginator(self):
-        '''Проверка словаря context для страниц с паджинатором'''
+        """Проверка словаря context для страниц с паджинатором"""
+        count_test_post = 18
+        test_posts = []
+        for i in range(count_test_post):
+            test_posts.append(Post(
+                author=self.user,
+                group=self.group,
+                text=f'Тестовый текст поста {i + 1}'))
+        Post.objects.bulk_create(test_posts)
         pages = [
             reverse('posts:index'),
             reverse(
@@ -84,11 +88,11 @@ class PostPegesTests(TestCase):
             )
             self.assertEqual(
                 len(respons_second_page.context['page_obj']),
-                COUNT_TEST_POST - settings.LIMIT_POSTS
+                count_test_post - settings.LIMIT_POSTS + 1
             )
 
     def test_types_with_form_correct_context(self):
-        '''Проверка словаря context на страницах с формой'''
+        """Проверка словаря context на страницах с формой"""
         response_create = self.authorized_client.get(
             reverse('posts:post_create')
         )
@@ -104,27 +108,31 @@ class PostPegesTests(TestCase):
                     response_create.context.get('form').fields.get(value)
                 )
                 self.assertIsInstance(form_field, expected)
+                self.assertIsInstance(
+                    response_create.context.get('form'), PostForm
+                )
                 form_field = (
                     response_edit.context.get('form').fields.get(value)
                 )
                 self.assertIsInstance(form_field, expected)
+                self.assertEqual(response_edit.context['is_edit'], True)
 
     def test_post_detail_pages(self):
-        '''Шаблон post_detail сформирован с правильным контекстом'''
+        """Шаблон post_detail сформирован с правильным контекстом"""
         response = self.client.get(
             reverse('posts:post_detail', kwargs={'post_id': TEST_POST_ID})
         )
         test_post = {
             response.context.get('post').author: self.user,
             response.context.get('post').group: self.group,
-            response.context.get('post').text: 'Тестовый текст поста 1',
+            response.context.get('post').text: 'Тестовый пост',
         }
         for value, expected in test_post.items():
             with self.subTest(value=value):
                 self.assertEqual(value, expected)
 
     def test_additional_verification_when_creating_a_post(self):
-        '''При создании пост появляется на нужных страницах'''
+        """При создании пост появляется на нужных страницах"""
         test_post = Post.objects.create(
             author=self.user,
             group=self.group,
@@ -135,7 +143,7 @@ class PostPegesTests(TestCase):
             reverse(
                 'posts:profile',
                 kwargs={'username': self.user.username}),
-            reverse('posts:group_list', kwargs={'slug': self.group.slug})
+            reverse('posts:group_list', kwargs={'slug': self.group.slug}),
         ]
         for reverse_name in pages:
             with self.subTest(reverse_name=reverse_name):
@@ -144,3 +152,14 @@ class PostPegesTests(TestCase):
                 self.assertEqual(first_object.author, test_post.author)
                 self.assertEqual(first_object.group, test_post.group)
                 self.assertEqual(first_object.text, test_post.text)
+
+    def test_post_did_not_get_into_another_group(self):
+        """Пост не попал в группу, для которой не был предназначен"""
+        self.group2 = Group.objects.create(
+            title='Тестовая группа 2',
+            slug='test_slug_2'
+        )
+        response = self.client.get(
+            reverse('posts:group_list', kwargs={'slug': self.group2.slug})
+        )
+        self.assertEqual(len(response.context['page_obj']), 0)
