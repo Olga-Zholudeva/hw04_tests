@@ -1,3 +1,4 @@
+from urllib import response
 from django.test import Client, TestCase
 from django.urls import reverse
 
@@ -54,7 +55,7 @@ class PostCreateFormTest(TestCase):
         self.assertEqual(Post.objects.count(), 0)
         self.assertRedirects(response, '/auth/login/?next=/create/')
 
-    def test_edit_post(self):
+    def test_edit_post_authorized_client(self):
         """Авторизованный пользователь может изменить свой пост"""
         self.post = Post.objects.create(
             text='Текст поста',
@@ -75,3 +76,20 @@ class PostCreateFormTest(TestCase):
         )
         post_edit = Post.objects.first()
         self.assertEqual(post_edit.text, form_data['text'])
+
+    def test_edit_post_guest_client(self):
+        """Неавторизованный пользователь не может отредактировать пост"""
+        self.post = Post.objects.create(
+            text='Текст поста',
+            group=self.group,
+            author=self.user,
+        )
+        form_data = {
+            'text': 'Внесли изменения в текст поста'
+        }
+        response = self.guest_client.post(
+            reverse('posts:post_edit', kwargs={'post_id': self.post.id}),
+            data=form_data,
+            follow=True
+        )
+        self.assertRedirects(response, '/auth/login/?next=/posts/1/edit/')

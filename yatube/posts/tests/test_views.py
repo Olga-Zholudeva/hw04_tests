@@ -1,3 +1,4 @@
+from multiprocessing import context
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.conf import settings
@@ -89,12 +90,9 @@ class PostPegesTests(TestCase):
                 count_test_post - settings.LIMIT_POSTS + 1
             )
 
-    def test_types_with_form_correct_context(self):
-        """Проверка словаря context на страницах с формой"""
-        response_create = self.authorized_client.get(
-            reverse('posts:post_create')
-        )
-        response_edit = self.authorized_client.get(
+    def test_correct_context_post_edit(self):
+        """Проверка словаря context страницы post_edit"""
+        response = self.authorized_client.get(
             reverse('posts:post_edit', kwargs={'post_id': TEST_POST_ID}))
         form_fields = {
             'text': forms.fields.CharField,
@@ -103,27 +101,34 @@ class PostPegesTests(TestCase):
         for value, expected in form_fields.items():
             with self.subTest(value=value):
                 form_field = (
-                    response_create.context.get('form').fields.get(value)
+                    response.context.get('form').fields.get(value)
                 )
                 self.assertIsInstance(form_field, expected)
-                self.assertIsInstance(
-                    response_create.context.get('form'), PostForm
-                )
-                form_field = (
-                    response_edit.context.get('form').fields.get(value)
-                )
+                self.assertEqual(response.context['is_edit'], True)
+
+    def test_correct_context_post_create(self):
+        """Проверка словаря context страницы post_create"""
+        response = self.authorized_client.get(reverse('posts:post_create'))
+        form_fields = {
+            'text': forms.fields.CharField,
+            'group': forms.fields.ChoiceField,
+        }
+        for value, expected in form_fields.items():
+            with self.subTest(value=value):
+                form_field = (response.context.get('form').fields.get(value))
                 self.assertIsInstance(form_field, expected)
-                self.assertEqual(response_edit.context['is_edit'], True)
+                self.assertIsInstance(response.context.get('form'), PostForm)
 
     def test_post_detail_pages(self):
         """Шаблон post_detail сформирован с правильным контекстом"""
         response = self.client.get(
             reverse('posts:post_detail', kwargs={'post_id': TEST_POST_ID})
         )
+        get_post_context = response.context.get('post')
         test_post = {
-            response.context.get('post').author: self.user,
-            response.context.get('post').group: self.group,
-            response.context.get('post').text: 'Тестовый пост',
+            get_post_context.author: self.user,
+            get_post_context.group: self.group,
+            get_post_context.text: 'Тестовый пост',
         }
         for value, expected in test_post.items():
             with self.subTest(value=value):

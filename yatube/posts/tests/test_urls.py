@@ -1,3 +1,5 @@
+from django.urls import reverse
+from urllib import response
 from django.test import TestCase, Client
 from http import HTTPStatus
 
@@ -20,8 +22,11 @@ class PostUrlTest(TestCase):
             group=cls.group,
             text='Тестовый текст'
         )
+    
+    def setUp(self):
+        self.authorized_client2 = Client()
 
-    def test__pages_and_template_names_for_non_authorized_users(self):
+    def test_pages_and_template_names_for_non_authorized_users(self):
         self.guest_client = Client()
         url_addresses_templates_names = {
             '/': 'posts/index.html',
@@ -48,6 +53,29 @@ class PostUrlTest(TestCase):
                 response = self.authorized_client.get(address)
                 self.assertEqual(response.status_code, HTTPStatus.OK)
                 self.assertTemplateUsed(response, template)
+
+    def test_redirect_guest_user_fo_page_post_edit_create(self):
+        self.guest_client = Client()
+        url_page_redirect_address = {
+            '/create/': '/auth/login/?next=/create/',
+            '/posts/1/edit/': '/auth/login/?next=/posts/1/edit/'
+        }
+        for page, redirect_address in url_page_redirect_address.items():
+            with self.subTest(page=page):
+                response = self.guest_client.get(page)
+                self.assertEqual(response.status_code, HTTPStatus.FOUND)
+                self.assertRedirects(response, redirect_address)
+
+    def test_redirect_authorized_client_not_author_page_post_edit(self):
+        self.user = User.objects.create(username='Test_user2')
+        self.authorized_client2 = Client()
+        self.authorized_client2.force_login(self.user)
+        response = self.authorized_client2.get(reverse(
+            'posts:post_edit', kwargs={'post_id': self.post.id})
+        )
+        self.assertRedirects(response, reverse(
+            'posts:post_detail', kwargs={'post_id': self.post.id}
+        ))
 
     def test_request_to_a_non_existent_page(self):
         self.guest_client = Client()
