@@ -1,5 +1,4 @@
 from django.urls import reverse
-from urllib import response
 from django.test import TestCase, Client
 from http import HTTPStatus
 
@@ -22,7 +21,7 @@ class PostUrlTest(TestCase):
             group=cls.group,
             text='Тестовый текст'
         )
-    
+
     def setUp(self):
         self.authorized_client2 = Client()
 
