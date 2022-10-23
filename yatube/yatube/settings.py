@@ -24,7 +24,8 @@ INSTALLED_APPS = [
     'posts.apps.PostsConfig',
     'users',
     'core',
-    'about'
+    'about',
+    'sorl.thumbnail',
 ]
 
 MIDDLEWARE = [
@@ -107,3 +108,15 @@ EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'sent_emails')
 
 LIMIT_POSTS = 10
+
+# Static files (CSS, JavaScript, Images)
+# https://docs.djangoproject.com/en/2.2/howto/static-files/
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+    }
+}

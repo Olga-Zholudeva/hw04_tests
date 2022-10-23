@@ -7,6 +7,7 @@
 {% else %}
   <h3><center>Добавить запись</center></h3>
 {% endif %}
+{% load thumbnail %}
 </div>
 <div class="container py-5">
   <div class="row justify-content-center">
@@ -15,7 +16,7 @@
         <div class="card-header">       
           Новый пост             
         </div>       
-        <form method="post"> {% csrf_token %} {{form.as_p}}
+        <form method="post" enctype="multipart/form-data"> {% csrf_token %} {{form.as_p}}
           {% if is_edit %}
           <button type="submit" class="btn btn-primary">
             Сохранить

@@ -3,6 +3,7 @@ from django.urls import reverse
 from django.conf import settings
 from django import forms
 from posts.forms import PostForm
+from django.core.cache import cache
 
 from ..models import Group, Post, User
 
