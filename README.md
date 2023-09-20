@@ -24,7 +24,7 @@
 
 ### Запуск тестов:
 
-- Клонируем репозиторий: **git clone [hw02_community](https://github.com/Olga-Zholudeva/hw02_community)**
+- Клонируем репозиторий: **git clone [hw04_tests](https://github.com/Olga-Zholudeva/hw04_tests)**
 - Cоздаем и активировируем виртуальное окружение: **python3 -m venv env source env/bin/activate**
 - Устанавливаем зависимости из файла requirements.txt: **pip install -r requirements.txt**
 - Переходим в папку yatube: **cd yatube**
