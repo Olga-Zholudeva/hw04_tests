@@ -31,10 +31,6 @@
 - Применяем миграции: **python manage.py makemigrations**
 - Создаем супер пользователя: **python manage.py createsuperuser**
 - Применяем статику: **python manage.py collectstatic**
-- В папку с проектом, где файл settings.py добавляем файл .env куда прописываем наши параметры:
-  - SECRET_KEY='Ваш секретный ключ'
-  - ALLOWED_HOSTS='127.0.0.1, localhost'
-  - DEBUG=True
 - Запускаем тесты: **python manage.py test**
 
 ### Проект выполнила:
